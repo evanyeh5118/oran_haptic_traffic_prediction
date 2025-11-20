@@ -4,11 +4,12 @@
 # Sends packets from UE to ext-dn and receives echo responses
 
 DOCKER_COMPOSE_DIR="openairinterface5g/ci-scripts/yaml_files/5g_rfsimulator"
+SRC_PY_DIR="src/udp/"
 UE_SHARED_DIR="${DOCKER_COMPOSE_DIR}/ue-shared"
 EXT_DN_SHARED_DIR="${DOCKER_COMPOSE_DIR}/ext-dn-shared"
 UE_CONTAINER="rfsim5g-oai-nr-ue"
 EXT_DN_CONTAINER="rfsim5g-oai-ext-dn"
-SENDER_INTERVAL=0.01
+SENDER_INTERVAL=1
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -30,7 +31,7 @@ trap cleanup SIGINT SIGTERM
 
 # ===== SETUP RECEIVER (ext-dn) =====
 echo -e "${BLUE}[INFO] Copying UDP receiver script to ext-dn shared volume...${NC}"
-cp scripts/pyscripts/udp_receiver_bidirect.py "${EXT_DN_SHARED_DIR}/"
+cp ${SRC_PY_DIR}/udp_receiver_bidirect.py "${EXT_DN_SHARED_DIR}/"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}[SUCCESS] Receiver script copied to ${EXT_DN_SHARED_DIR}/${NC}"
@@ -95,7 +96,7 @@ sleep 2  # Give receiver time to start
 
 # ===== SETUP SENDER (UE) =====
 echo -e "${BLUE}[INFO] Copying UDP sender script to UE shared volume...${NC}"
-cp scripts/pyscripts/udp_sender_bidirect.py "${UE_SHARED_DIR}/"
+cp ${SRC_PY_DIR}/udp_sender_bidirect.py "${UE_SHARED_DIR}/"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}[SUCCESS] Sender script copied to ${UE_SHARED_DIR}/${NC}"
