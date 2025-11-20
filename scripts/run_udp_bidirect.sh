@@ -8,6 +8,7 @@ UE_SHARED_DIR="${DOCKER_COMPOSE_DIR}/ue-shared"
 EXT_DN_SHARED_DIR="${DOCKER_COMPOSE_DIR}/ext-dn-shared"
 UE_CONTAINER="rfsim5g-oai-nr-ue"
 EXT_DN_CONTAINER="rfsim5g-oai-ext-dn"
+SENDER_INTERVAL=0.01
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -38,13 +39,46 @@ else
     exit 1
 fi
 
-echo -e "${BLUE}[INFO] Installing Python3 in ext-dn container...${NC}"
-docker exec ${EXT_DN_CONTAINER} apt-get update -qq && apt-get install -y -qq python3 > /dev/null 2>&1
+# ===== CHECK AND INSTALL PYTHON3 =====
+echo -e "${BLUE}[INFO] Checking if Python3 exists in ext-dn container...${NC}"
+docker exec ${EXT_DN_CONTAINER} which python3 > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}[SUCCESS] Python3 installed${NC}"
+    echo -e "${GREEN}[SUCCESS] Python3 already installed${NC}"
 else
-    echo -e "${YELLOW}[WARNING] Could not install Python3, attempting with existing setup${NC}"
+    echo -e "${YELLOW}[INFO] Python3 not found, installing...${NC}"
+    echo -e "${BLUE}[INFO] Running: apt-get update && apt-get install -y python3${NC}"
+    docker exec ${EXT_DN_CONTAINER} bash -c "apt-get update && apt-get install -y python3"
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}[SUCCESS] Python3 installation command completed${NC}"
+    else
+        echo -e "${RED}[ERROR] Failed to install Python3${NC}"
+        echo -e "${RED}[ERROR] Please check if the container is running and has internet access${NC}"
+        exit 1
+    fi
+    
+    # Verify Python3 is installed and ready
+    echo -e "${BLUE}[INFO] Verifying Python3 installation...${NC}"
+    sleep 2  # Wait a moment for installation to complete
+    
+    MAX_RETRIES=10
+    RETRY_COUNT=0
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        docker exec ${EXT_DN_CONTAINER} which python3 > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}[SUCCESS] Python3 verified and ready${NC}"
+            break
+        fi
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        echo -e "${YELLOW}[INFO] Waiting for Python3 to be ready... (attempt $RETRY_COUNT/$MAX_RETRIES)${NC}"
+        sleep 1
+    done
+    
+    if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+        echo -e "${RED}[ERROR] Python3 verification failed after multiple attempts${NC}"
+        exit 1
+    fi
 fi
 
 echo -e "${BLUE}[INFO] Starting UDP receiver in ext-dn container: ${EXT_DN_CONTAINER}${NC}"
@@ -79,7 +113,7 @@ docker exec -it ${UE_CONTAINER} python3 /ue-shared/udp_sender_bidirect.py \
   --port 5000 \
   --listen-port 5001 \
   --src-ip 12.1.1.2 \
-  --interval 1.0 \
+  --interval ${SENDER_INTERVAL} \
   --iface oaitun_ue1
 
 echo -e "${BLUE}[INFO] UDP sender stopped${NC}"
