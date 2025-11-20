@@ -2,7 +2,7 @@
 set -e
 
 TARGET_DIR="openairinterface5g/ci-scripts/yaml_files/5g_rfsimulator"
-CORE_SERVICES=("mysql" "oai-amf" "oai-smf" "oai-upf" "oai-ext-dn")
+CORE_SERVICES=("mysql" "oai-amf" "oai-smf" "oai-upf" "oai-ext-dn" "oai-edge")
 GNB_SERVICE="oai-gnb"
 UE_SERVICE="oai-nr-ue"
 AMF_CONTAINER_NAME="rfsim5g-oai-amf"

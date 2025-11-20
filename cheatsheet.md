@@ -21,3 +21,17 @@ docker exec -it rfsim5g-oai-nr-ue \
   ping -I oaitun_ue1 192.168.72.135
 # DN tcmpdump
  docker exec -it rfsim5g-oai-ext-dn tcpdump -i eth0 
+
+# UDP
+python3 udp_receiver_bidirect.py \
+  --listen-port 5000 \
+  --response-ip 12.1.1.2 \
+  --response-port 5001 \
+  --listen-ip 0.0.0.0
+
+ python3 udp_sender_bidirect.py \
+  --ip 192.168.72.135 \
+  --port 5000 \
+  --listen-port 5001 \
+  --src-ip 12.1.1.2 \
+  --interval 1.0
