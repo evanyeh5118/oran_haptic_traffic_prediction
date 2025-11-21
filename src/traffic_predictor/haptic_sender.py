@@ -26,7 +26,9 @@ def receive_udp(listen_port, listen_ip=None):
             
             # Try to extract sequence number from payload
             try:
-                seq = int(message)
+                # Parse message format: series_num:payload
+                parts = message.split(':', 1)
+                seq = int(parts[0])
                 if seq in sent_packets:
                     send_time = sent_packets[seq]
                     travel_time = (recv_time - send_time) * 1000  # Convert to milliseconds
@@ -105,8 +107,8 @@ def send_udp_from_csv(ip, port, csv_path, iface=None, src_ip=None, listen_port=N
 
             # Check transmission rule from sender.py
             if not csv_row.should_transmit:
-                if verbose:
-                    print(f"[SKIP row {csv_row.row_index}] Transmission flag is False")
+                #if verbose:
+                #    print(f"[SKIP row {csv_row.row_index}] Transmission flag is False")
                 continue
 
             # Schedule based on real-time counter and CSV 'Time' (if available)
@@ -117,12 +119,17 @@ def send_udp_from_csv(ip, port, csv_path, iface=None, src_ip=None, listen_port=N
                 if sleep_secs > 0:
                     time.sleep(sleep_secs)
 
-            # Send payload from CSV
-            message = csv_row.payload
-            sock.sendto(message.encode("utf-8"), (ip, port))
+            # Send payload from CSV with series number prepended
             sent_count += 1
-            if verbose:
-                print(f"[SENT #{sent_count}] row {csv_row.row_index}: {message}")
+            send_time = time.time()
+            message = f"{sent_count}:{csv_row.payload}"
+            sock.sendto(message.encode("utf-8"), (ip, port))
+            sent_packets[sent_count] = send_time
+
+            #if verbose:
+            #    print(f"[SENT #{sent_count}] row {csv_row.row_index}: {message}")
+
+            
 
     except KeyboardInterrupt:
         if verbose:

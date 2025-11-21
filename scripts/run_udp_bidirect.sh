@@ -3,6 +3,13 @@
 # Script to run UDP bidirectional communication test
 # Sends packets from UE to ext-dn and receives echo responses
 
+#--------------------------------------------------------
+# UE: udp_sender_bidirect.py
+# ext-dn: udp_receiver_bidirect.py
+# No program running on the edge, so once the mirroring to edge is established, 
+# edge will echo back the packets to the UE automatically, and UE shows a unknown packets.
+#--------------------------------------------------------
+
 DOCKER_COMPOSE_DIR="openairinterface5g/ci-scripts/yaml_files/5g_rfsimulator"
 SRC_PY_DIR="src/udp/"
 UE_SHARED_DIR="${DOCKER_COMPOSE_DIR}/ue-shared"
