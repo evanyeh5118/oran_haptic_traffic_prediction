@@ -10,7 +10,7 @@ CONTEXT_PREDICTOR_DIR="context_aware_traffic_predictor"
 OAI_EDGE_SHARED_DIR="${DOCKER_COMPOSE_DIR}/oai-edge-shared"
 OAI_EDGE_CONTAINER="rfsim5g-oai-edge"
 EDGE_IP="192.168.72.136"
-EDGE_PORT=5003
+EDGE_PORT=5000
 VERBOSE=true
 
 # Parse command-line arguments
@@ -85,9 +85,9 @@ if [ "$VERBOSE" = true ]; then
 fi
 
 docker exec -it ${OAI_EDGE_CONTAINER} bash -lc \
-  "source /opt/conda/etc/profile.d/conda.sh && conda activate torch222 && python3 -u /oai-edge-shared/context_aware_traffic_predictor/src/network/edge.py \
+  "(ip addr show dev eth0 | grep -q 192.168.72.135 || ip addr add 192.168.72.135/24 dev eth0 || true) && source /opt/conda/etc/profile.d/conda.sh && conda activate torch222 && python3 -u /oai-edge-shared/context_aware_traffic_predictor/src/network/edge.py \
   --listen-port ${EDGE_PORT} \
-  --listen-ip ${EDGE_IP} \
+  --listen-ip 0.0.0.0 \
   ${VERBOSE_FLAG}"
 
 echo -e "${BLUE}[INFO] edge predictor stopped${NC}"

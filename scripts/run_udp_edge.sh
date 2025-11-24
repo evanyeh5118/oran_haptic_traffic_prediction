@@ -64,7 +64,7 @@ fi
 # ip addr add 192.168.72.135/24 dev eth0
 
 docker exec -it ${OAI_EDGE_CONTAINER} bash -lc \
-  "(ip addr add 192.168.72.135/24 dev eth0 || true) && source /opt/conda/etc/profile.d/conda.sh && conda activate torch222 && python3 -u /oai-edge-shared/udp_edge.py \
+  "(ip addr show dev eth0 | grep -q 192.168.72.135 || ip addr add 192.168.72.135/24 dev eth0 || true) && source /opt/conda/etc/profile.d/conda.sh && conda activate torch222 && python3 -u /oai-edge-shared/udp_edge.py \
   --listen-port ${EDGE_PORT} \
   --listen-ip 0.0.0.0 \
   ${VERBOSE_FLAG}"
