@@ -78,3 +78,4 @@ docker exec rfsim5g-oai-ext-dn bash -lc \
   --listen-ip 0.0.0.0"
 
   tcpdump -i eth0 -nn
+\dos2unix
