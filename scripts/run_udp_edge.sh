@@ -45,13 +45,13 @@ trap cleanup SIGINT SIGTERM
 
 
 # Copy haptic_edge.py to oai-edge-shared
-echo -e "${BLUE}[INFO] Copying haptic_edge.py to oai-edge-shared...${NC}"
-cp "src/traffic_predictor/haptic_edge.py" "${OAI_EDGE_SHARED_DIR}/"
+echo -e "${BLUE}[INFO] Copying udp_edge.py to oai-edge-shared...${NC}"
+cp "src/traffic_predictor/udp_edge.py" "${OAI_EDGE_SHARED_DIR}/"
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}[SUCCESS] haptic_edge.py copied to ${OAI_EDGE_SHARED_DIR}/${NC}"
+    echo -e "${GREEN}[SUCCESS] udp_edge.py copied to ${OAI_EDGE_SHARED_DIR}/${NC}"
 else
-    echo -e "${RED}[ERROR] Failed to copy haptic_edge.py${NC}"
+    echo -e "${RED}[ERROR] Failed to copy udp_edge.py${NC}"
     exit 1
 fi
 
@@ -60,12 +60,15 @@ if [ "$VERBOSE" = true ]; then
     VERBOSE_FLAG="--verbose"
 fi
 
+# Inside edge container, add IP address before running haptic edge
+# ip addr add 192.168.72.135/24 dev eth0
+
 docker exec -it ${OAI_EDGE_CONTAINER} bash -lc \
-  "source /opt/conda/etc/profile.d/conda.sh && conda activate torch222 && python3 -u /oai-edge-shared/haptic_edge.py \
+  "(ip addr add 192.168.72.135/24 dev eth0 || true) && source /opt/conda/etc/profile.d/conda.sh && conda activate torch222 && python3 -u /oai-edge-shared/udp_edge.py \
   --listen-port ${EDGE_PORT} \
-  --listen-ip ${EDGE_IP} \
+  --listen-ip 0.0.0.0 \
   ${VERBOSE_FLAG}"
 
-echo -e "${BLUE}[INFO] edge predictor stopped${NC}"
+echo -e "${BLUE}[INFO] udp edge stopped${NC}"
 
 
