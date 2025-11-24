@@ -61,6 +61,14 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
+# ===== CLEANUP ZOMBIE PROCESSES AT START =====
+echo -e "${BLUE}[INFO] Cleaning up any zombie processes from previous runs...${NC}"
+docker exec ${EXT_DN_CONTAINER} pkill -f "haptic_receiver" 2>/dev/null || true
+docker exec ${EXT_DN_CONTAINER} pkill -f "udp_receiver_bidirect" 2>/dev/null || true
+docker exec ${UE_CONTAINER} pkill -f "haptic_sender" 2>/dev/null || true
+sleep 2  # Give time for processes to terminate
+echo -e "${GREEN}[SUCCESS] Zombie processes cleaned${NC}"
+
 echo -e "${BLUE}[INFO] ===== COPYING REQUIRED FILES TO UE SHARED VOLUME =====${NC}"
 
 # ===== COPY FILE 1: dataset_reader.py =====

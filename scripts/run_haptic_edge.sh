@@ -10,7 +10,7 @@ CONTEXT_PREDICTOR_DIR="context_aware_traffic_predictor"
 OAI_EDGE_SHARED_DIR="${DOCKER_COMPOSE_DIR}/oai-edge-shared"
 OAI_EDGE_CONTAINER="rfsim5g-oai-edge"
 EDGE_IP="192.168.72.136"
-EDGE_PORT=5003
+EDGE_PORT=5000
 VERBOSE=true
 
 # Parse command-line arguments
@@ -43,41 +43,17 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-echo -e "${BLUE}[INFO] ===== MANAGING CONTEXT_AWARE_TRAFFIC_PREDICTOR =====${NC}"
 
-# Check if context_aware_traffic_predictor already exists in oai-edge-shared
-if [ -d "${OAI_EDGE_SHARED_DIR}/context_aware_traffic_predictor" ]; then
-    echo -e "${YELLOW}[WARNING] context_aware_traffic_predictor already exists in ${OAI_EDGE_SHARED_DIR}${NC}"
-    echo -e "${BLUE}[INFO] Deleting existing context_aware_traffic_predictor...${NC}"
-    rm -rf "${OAI_EDGE_SHARED_DIR}/context_aware_traffic_predictor"
-    
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}[SUCCESS] Deleted existing context_aware_traffic_predictor${NC}"
-    else
-        echo -e "${RED}[ERROR] Failed to delete existing context_aware_traffic_predictor${NC}"
-        exit 1
-    fi
-fi
-
-# Copy context_aware_traffic_predictor from project root to oai-edge-shared
-echo -e "${BLUE}[INFO] Copying context_aware_traffic_predictor to oai-edge-shared...${NC}"
-cp -r "${CONTEXT_PREDICTOR_DIR}" "${OAI_EDGE_SHARED_DIR}/"
+# Copy haptic_edge.py to oai-edge-shared
+echo -e "${BLUE}[INFO] Copying haptic_edge.py to oai-edge-shared...${NC}"
+cp "src/traffic_predictor/haptic_edge.py" "${OAI_EDGE_SHARED_DIR}/"
 
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}[SUCCESS] context_aware_traffic_predictor copied to ${OAI_EDGE_SHARED_DIR}/${NC}"
+    echo -e "${GREEN}[SUCCESS] haptic_edge.py copied to ${OAI_EDGE_SHARED_DIR}/${NC}"
 else
-    echo -e "${RED}[ERROR] Failed to copy context_aware_traffic_predictor${NC}"
+    echo -e "${RED}[ERROR] Failed to copy haptic_edge.py${NC}"
     exit 1
 fi
-
-echo -e "${GREEN}[SUCCESS] context_aware_traffic_predictor setup complete${NC}"
-
-# ===== EXECUTE EDGE PREDICTOR =====
-echo -e "\n${BLUE}[INFO] ===== EXECUTING EDGE PREDICTOR =====${NC}"
-echo -e "${BLUE}[INFO] Container: ${OAI_EDGE_CONTAINER}${NC}"
-echo -e "${BLUE}[INFO] Listening on IP: ${EDGE_IP}${NC}"
-echo -e "${BLUE}[INFO] Listening on port: ${EDGE_PORT}${NC}"
-echo -e "${BLUE}[INFO] Predictor location: /oai-edge-shared/context_aware_traffic_predictor/src/network/edge.py${NC}"
 
 VERBOSE_FLAG=""
 if [ "$VERBOSE" = true ]; then
@@ -85,7 +61,7 @@ if [ "$VERBOSE" = true ]; then
 fi
 
 docker exec -it ${OAI_EDGE_CONTAINER} bash -lc \
-  "source /opt/conda/etc/profile.d/conda.sh && conda activate torch222 && python3 -u /oai-edge-shared/context_aware_traffic_predictor/src/network/edge.py \
+  "source /opt/conda/etc/profile.d/conda.sh && conda activate torch222 && python3 -u /oai-edge-shared/haptic_edge.py \
   --listen-port ${EDGE_PORT} \
   --listen-ip ${EDGE_IP} \
   ${VERBOSE_FLAG}"

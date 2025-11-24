@@ -46,6 +46,14 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
+# ===== CLEANUP ZOMBIE PROCESSES AT START =====
+echo -e "${BLUE}[INFO] Cleaning up any zombie processes from previous runs...${NC}"
+docker exec ${EXT_DN_CONTAINER} pkill -f "udp_receiver_bidirect" 2>/dev/null || true
+docker exec ${EXT_DN_CONTAINER} pkill -f "haptic_receiver" 2>/dev/null || true
+docker exec ${UE_CONTAINER} pkill -f "udp_sender_bidirect" 2>/dev/null || true
+sleep 2  # Give time for processes to terminate
+echo -e "${GREEN}[SUCCESS] Zombie processes cleaned${NC}"
+
 # ===== SETUP RECEIVER (ext-dn) =====
 echo -e "${BLUE}[INFO] Copying UDP receiver script to ext-dn shared volume...${NC}"
 cp ${SRC_PY_DIR}/udp_receiver_bidirect.py "${EXT_DN_SHARED_DIR}/"

@@ -76,3 +76,5 @@ docker exec rfsim5g-oai-ext-dn bash -lc \
   --response-ip 12.1.1.2 \
   --response-port 5001 \
   --listen-ip 0.0.0.0"
+
+  tcpdump -i eth0 -nn
