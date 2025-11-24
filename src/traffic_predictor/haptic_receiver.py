@@ -8,6 +8,12 @@ def receive_and_echo(listen_port, response_ip, response_port, listen_ip=None, if
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
+    # Allow port to be reused even if in TIME_WAIT state (SO_REUSEPORT for UDP)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    except (AttributeError, OSError):
+        pass  # SO_REUSEPORT may not be available on all systems
+    
     # Option A: bind to specific interface (requires root)
     if iface:
         # SO_BINDTODEVICE expects a bytes string (no trailing \0 needed on Linux here)

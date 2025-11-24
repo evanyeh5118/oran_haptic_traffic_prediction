@@ -34,58 +34,6 @@ wait_for_healthy() {
     done
 }
 
-install_python3_in_container() {
-    local CONTAINER=$1
-    
-    # Colors for output
-    local GREEN='\033[0;32m'
-    local BLUE='\033[0;34m'
-    local RED='\033[0;31m'
-    local YELLOW='\033[1;33m'
-    local NC='\033[0m' # No Color
-    
-    echo -e "${BLUE}[INFO] Checking if Python3 exists in $CONTAINER container...${NC}"
-    docker exec ${CONTAINER} which python3 > /dev/null 2>&1
-
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}[SUCCESS] Python3 already installed in $CONTAINER${NC}"
-    else
-        echo -e "${YELLOW}[INFO] Python3 not found in $CONTAINER, installing...${NC}"
-        echo -e "${BLUE}[INFO] Running: apt-get update && apt-get install -y python3${NC}"
-        docker exec ${CONTAINER} bash -c "apt-get update && apt-get install -y python3"
-        
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}[SUCCESS] Python3 installation command completed in $CONTAINER${NC}"
-        else
-            echo -e "${RED}[ERROR] Failed to install Python3 in $CONTAINER${NC}"
-            echo -e "${RED}[ERROR] Please check if the container is running and has internet access${NC}"
-            exit 1
-        fi
-        
-        # Verify Python3 is installed and ready
-        echo -e "${BLUE}[INFO] Verifying Python3 installation in $CONTAINER...${NC}"
-        sleep 2  # Wait a moment for installation to complete
-        
-        local MAX_RETRIES=10
-        local RETRY_COUNT=0
-        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            docker exec ${CONTAINER} which python3 > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}[SUCCESS] Python3 verified and ready in $CONTAINER${NC}"
-                break
-            fi
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            echo -e "${YELLOW}[INFO] Waiting for Python3 to be ready in $CONTAINER... (attempt $RETRY_COUNT/$MAX_RETRIES)${NC}"
-            sleep 1
-        done
-        
-        if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-            echo -e "${RED}[ERROR] Python3 verification failed in $CONTAINER after multiple attempts${NC}"
-            exit 1
-        fi
-    fi
-}
-
 cd "$TARGET_DIR"
 
 echo "Starting core services: ${CORE_SERVICES[*]}"
@@ -115,10 +63,20 @@ echo "UE is healthy. Fetching AMF logs..."
 docker logs "$AMF_CONTAINER_NAME"
 
 # ===== CHECK AND INSTALL PYTHON3 =====
-echo ""
-echo "Installing Python3 in required containers..."
-install_python3_in_container "$EXT_DN_CONTAINER"
-install_python3_in_container "$EDGE_CONTAINER"
+#echo ""
+#echo "Installing Python3 in required containers..."
+#install_python3_in_container "$EXT_DN_CONTAINER"
+#install_python3_in_container "$EDGE_CONTAINER"
+
+#echo ""
+#echo "Setting up Python environment in containers..."
+#echo "→ Setting up $EXT_DN_CONTAINER:"
+#docker exec $EXT_DN_CONTAINER bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate torch222"
+#echo "→ Result: $?"
+
+#echo "→ Setting up $EDGE_CONTAINER:"
+#docker exec $EDGE_CONTAINER bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate torch222"
+#echo "→ Result: $?"
 
 echo ""
 echo "All services are ready!"

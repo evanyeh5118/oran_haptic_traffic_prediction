@@ -44,8 +44,17 @@ NC='\033[0m' # No Color
 # Cleanup function to kill background processes
 cleanup() {
     echo -e "\n${BLUE}[INFO] Shutting down...${NC}"
-    kill $RECEIVER_PID 2>/dev/null
-    wait $RECEIVER_PID 2>/dev/null
+    if [ ! -z "$RECEIVER_PID" ]; then
+        kill $RECEIVER_PID 2>/dev/null
+        wait $RECEIVER_PID 2>/dev/null
+        sleep 1
+    fi
+    
+    # Kill any leftover receiver processes in the container
+    echo -e "${BLUE}[INFO] Cleaning up leftover processes in ext-dn container...${NC}"
+    docker exec ${EXT_DN_CONTAINER} pkill -f "haptic_receiver" 2>/dev/null || true
+    docker exec ${EXT_DN_CONTAINER} pkill -f "udp_receiver_bidirect" 2>/dev/null || true
+    
     echo -e "${BLUE}[INFO] All processes stopped${NC}"
     exit 0
 }
@@ -104,11 +113,12 @@ fi
 echo -e "${BLUE}[INFO] Starting haptic receiver in ext-dn container: ${EXT_DN_CONTAINER}${NC}"
 echo -e "${BLUE}[INFO] Listening on ${EXT_DN_IP}:${EXT_DN_PORT}, echoing to UE (${UE_SRC_IP}:${LISTEN_PORT})${NC}"
 
-docker exec ${EXT_DN_CONTAINER} python3 /ext-dn-shared/haptic_receiver.py \
+docker exec ${EXT_DN_CONTAINER} bash -lc \
+  "source /opt/conda/etc/profile.d/conda.sh && conda activate torch222 && python3 -u /ext-dn-shared/haptic_receiver.py \
   --listen-port ${EXT_DN_PORT} \
   --response-ip ${UE_SRC_IP} \
   --response-port ${LISTEN_PORT} \
-  --listen-ip ${EXT_DN_IP} &
+  --listen-ip ${EXT_DN_IP}" &
 
 RECEIVER_PID=$!
 sleep 2  # Give receiver time to start
